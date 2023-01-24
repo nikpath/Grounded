@@ -1,5 +1,6 @@
 import React from 'react';
 import Section from '../components/Section.js';
+import NavMenu from '../components/NavMenu.js';
 
 import {
   SafeAreaView,
@@ -14,7 +15,7 @@ import {
 
 import {Colors} from 'react-native/Libraries/NewAppScreen';
 
-const Breathing = (navigation, route) => {
+const Techniques = (navigation, route) => {
   const isDarkMode = useColorScheme() === 'dark';
 
   const backgroundStyle = {
@@ -33,8 +34,15 @@ const Breathing = (navigation, route) => {
             Try out the{' '}
             <Text style={styles.highlight}>breathing visualizer</Text> here.
           </Section>
+          <Section title="BLS">
+            BLS is a technique where stimulation (tapping, vibrations, music) is
+            applied in an alternating pattern on both sides of your body. It's
+            proven to lower heart rate within 1-2 min.
+          </Section>
+          <Button title="Try out BLS" />
         </View>
       </ScrollView>
+      <NavMenu />
     </SafeAreaView>
   );
 };
@@ -58,4 +66,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Breathing;
+export default Techniques;

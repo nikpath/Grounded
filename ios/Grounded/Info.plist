@@ -35,6 +35,10 @@
 			</dict>
 		</dict>
 	</dict>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>App would like to use your bluetooth for communication purposes</string>
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string>App would like to use your bluetooth for communication purposes</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string></string>
 	<key>UILaunchStoryboardName</key>
@@ -50,8 +54,6 @@
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
-	<key>NSBluetoothAlwaysUsageDescription</key>
-	<string>App uses bluetooth to connect to the nearby wearable devices.</string>
 	<false/>
 </dict>
 </plist>

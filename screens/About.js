@@ -8,7 +8,7 @@ import {
   View,
   Button,
 } from 'react-native';
-
+import NavMenu from '../components/NavMenu';
 import {Colors} from 'react-native/Libraries/NewAppScreen';
 
 const About = (navigation, route) => {
@@ -37,6 +37,7 @@ const About = (navigation, route) => {
           <Section title="Grounding techniques">Breathing and BLS.</Section>
         </View>
       </ScrollView>
+      <NavMenu />
     </SafeAreaView>
   );
 };

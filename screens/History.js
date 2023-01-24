@@ -1,5 +1,6 @@
 import React from 'react';
 import Section from '../components/Section.js';
+import NavMenu from '../components/NavMenu.js';
 
 import {SafeAreaView, ScrollView, useColorScheme, View} from 'react-native';
 
@@ -26,6 +27,7 @@ const History = (navigation, route) => {
           </Section>
         </View>
       </ScrollView>
+      <NavMenu />
     </SafeAreaView>
   );
 };
