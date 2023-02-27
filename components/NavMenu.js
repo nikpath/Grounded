@@ -12,14 +12,15 @@ import {
 } from 'react-native';
 
 import {Colors} from 'react-native/Libraries/NewAppScreen';
-import Icon from 'react-native-vector-icons/FontAwesome';
+import {useNavigation} from '@react-navigation/native';
 
-const NavMenu = ({navigation}) => {
+const NavMenu = () => {
   const isDarkMode = useColorScheme() === 'dark';
 
   const backgroundStyle = {
     backgroundColor: isDarkMode ? Colors.light : Colors.lighter,
   };
+  const navigation = useNavigation();
 
   return (
     <SafeAreaView style={backgroundStyle}>
@@ -32,31 +33,17 @@ const NavMenu = ({navigation}) => {
           style={{
             backgroundColor: isDarkMode ? Colors.light : Colors.white,
           }}>
-          <Button
-            title="Home"
-            onPress={() => navigation.navigate('Home')}
-            icon={<Icon name="home" size={15} color="black" />}
-          />
+          <Button title="Home" onPress={() => navigation.navigate('Home')} />
           <Button
             title="Techniques"
             onPress={() => navigation.navigate('Techniques')}
-            icon={<Icon name="smile-o" size={15} color="black" />}
           />
           <Button
             title="History"
             onPress={() => navigation.navigate('History')}
-            icon={<Icon name="line-chart" size={15} color="black" />}
           />
-          <Button
-            title="About"
-            onPress={() => navigation.navigate('About')}
-            icon={<Icon name="info-circle" size={15} color="black" />}
-          />
-          <Button
-            title="Data"
-            onPress={() => navigation.navigate('Data')}
-            icon={<Icon name="database" size={15} color="black" />}
-          />
+          <Button title="About" onPress={() => navigation.navigate('About')} />
+          <Button title="Data" onPress={() => navigation.navigate('Data')} />
         </View>
       </ScrollView>
     </SafeAreaView>

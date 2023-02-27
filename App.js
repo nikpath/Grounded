@@ -6,7 +6,7 @@
  * @flow strict-local
  */
 
-import React from 'react';
+import * as React from 'react';
 import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import Home from './screens/Home.js';
@@ -14,6 +14,14 @@ import Techniques from './screens/Techniques.js';
 import History from './screens/History.js';
 import About from './screens/About.js';
 import DataStuff from './screens/DataStuff.js';
+import NavMenu from './components/NavMenu.js';
+import {
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
 const Stack = createNativeStackNavigator();
 

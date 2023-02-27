@@ -1,4 +1,5 @@
-import React from 'react';
+import * as React from 'react';
+import {useState, useEffect, useRef} from 'react';
 
 import {
   SafeAreaView,
@@ -9,7 +10,11 @@ import {
 } from 'react-native';
 import NavMenu from '../components/NavMenu';
 import DeviceModal from '../DeviceConnectionModal';
+import BioDisplay from '../components/BioDisplay';
 import useBLE from '../useBLE';
+import Database from '../database/Database';
+
+const db = new Database();
 
 const Home = () => {
   const {
@@ -18,12 +23,10 @@ const Home = () => {
     allDevices,
     connectToDevice,
     connectedDevice,
-    beatsPerMinute,
-    interBeatInterval,
-    skinConductance,
     disconnectFromDevice,
-  } = useBLE();
-  const [isModalVisible, setIsModalVisible] = React.useState(false);
+    writeToBiometrics,
+  } = useBLE('hello');
+  const [isModalVisible, setIsModalVisible] = useState(false);
 
   const scanForDevices = () => {
     requestPermissions(isGranted => {
@@ -31,6 +34,10 @@ const Home = () => {
         scanForPeripherals();
       }
     });
+  };
+
+  const resumeDataStream = () => {
+    writeToBiometrics(connectedDevice);
   };
 
   const hideModal = () => {
@@ -48,16 +55,10 @@ const Home = () => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.heartRateTitleWrapper}>
+        <BioDisplay onResume={resumeDataStream} />
         {connectedDevice ? (
           <>
-            <Text style={styles.heartRateTitleText}>BPM:</Text>
-            <Text style={styles.heartRateText}>{beatsPerMinute}</Text>
-            <Text style={styles.heartRateTitleText}>IBI:</Text>
-            <Text style={styles.heartRateText}>{interBeatInterval}</Text>
-            <Text style={styles.heartRateTitleText}>EDA:</Text>
-            <Text style={styles.heartRateText}>{skinConductance}</Text>
-            <Text style={styles.heartRateTitleText}>Your stress level is:</Text>
-            <Text style={styles.stressLevelText}>LOW</Text>
+            <Text style={styles.heartRateTitleText}>Device connected</Text>
           </>
         ) : (
           <Text style={styles.heartRateTitleText}>

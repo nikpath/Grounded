@@ -1,6 +1,7 @@
 import React from 'react';
 import Section from '../components/Section.js';
 import Database from '../database/Database.js';
+import groundedAPI from '../components/GroundedAPI.tsx';
 
 import {
   SafeAreaView,
@@ -14,6 +15,8 @@ import {
   Button,
   FlatList,
 } from 'react-native';
+
+const {getPrediction} = groundedAPI();
 
 import {Colors} from 'react-native/Libraries/NewAppScreen';
 
@@ -41,7 +44,7 @@ const DataStuff = (navigation, route) => {
       skinConductance,
       stressLevel,
     };
-    db.addSudoData(data)
+    db.add_BPM_raw(heartRate)
       .then(result => {
         console.log(result);
         setLoading(false);
@@ -52,10 +55,10 @@ const DataStuff = (navigation, route) => {
       });
   };
 
-  const fetchAllData = () => {
+  const fetchAllIBIData = () => {
     let bio_data = [];
     console.log('GETTING DATA');
-    db.listAllData()
+    db.getRawIBI()
       .then(data => {
         bio_data = data;
         setBioData(bio_data);
@@ -67,8 +70,20 @@ const DataStuff = (navigation, route) => {
       });
   };
 
+  const getResults = () => {
+    console.log('GETTING DATA');
+    db.get_latest_results()
+      .then(data => {
+        console.log('GETTING DATA WOOOOOOOHOOOOOOO');
+        console.log(data);
+      })
+      .catch(err => {
+        console.log(err);
+      });
+  };
+
   const deleteData = () => {
-    db.deleteData()
+    db.delete_ALL_raw_data()
       .then(result => {
         console.log(result);
         setLoading(true);
@@ -89,6 +104,24 @@ const DataStuff = (navigation, route) => {
         console.log(err);
         setLoading(false);
       });
+  };
+
+  const countRows = () => {
+    var thousand_rows = true;
+    Promise.all([
+      db.count_rows('BPM_raw'),
+      db.count_rows('EDA_raw'),
+      db.count_rows('IBI_raw'),
+    ]).then(values => {
+      values.forEach(row_count => {
+        if (row_count < 1000) {
+          console.log(row_count);
+          thousand_rows = false;
+        }
+      });
+      console.log(thousand_rows);
+      return thousand_rows;
+    });
   };
 
   const generateTable = (item, index) => {
@@ -147,16 +180,21 @@ const DataStuff = (navigation, route) => {
               <Button title="Add data" onPress={() => submitData()} />
             </View>
           </Section>
-          <Section title="List Data">
-            <Button title="Get all data" onPress={() => fetchAllData()} />
-            {bioData.length > 0 &&
-              bioData.map((item, index) => generateTable(item, index))}
+          <Section title="Count ALL rows">
+            <Button title="Count" onPress={() => countRows()} />
+          </Section>
+          <Section title="List IBI Data">
+            <Button title="Get IBI data" onPress={() => fetchAllIBIData()} />
           </Section>
           <Section title="Delete Data">
             <Button title="Delete Data" onPress={() => deleteData()} />
           </Section>
           <Section title="Delete Table">
             <Button title="Delete Table" onPress={() => deleteTable()} />
+          </Section>
+          <Section title="Predictions">
+            <Button title="Get predictions" onPress={() => getPrediction()} />
+            <Button title="Get latest result" onPress={() => getResults()} />
           </Section>
         </View>
       </ScrollView>
