@@ -1,5 +1,5 @@
 import React, {useState, useEffect, useCallback} from 'react';
-import Database from '../database/Database.js';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import {
   StyleSheet,
@@ -12,114 +12,34 @@ import {
 
 import {Colors} from 'react-native/Libraries/NewAppScreen';
 
-const db = new Database();
-
 const BioDisplay = props => {
   const [BPM_average, setBPM] = useState(0);
   const [EDA_average, setEDA] = useState(0);
   const [IBI_average, setIBI] = useState(0);
   const [stress_level, setStress] = useState(0);
-  const [cleared, setCleared] = useState('NO');
-  const [enoughData, setEnoughData] = useState(false);
 
-  const formatRawData = data_array => {
-    const postObject = {
-      EDA: data_array[0],
-      BPM: data_array[1],
-      IBI: data_array[2],
-    };
-    //console.log(postObject);
-    return JSON.stringify(postObject);
-  };
-
-  const checkIfEnoughRows = () => {
-    var thousand_rows = true;
-    Promise.all([
-      db.count_rows('BPM_raw'),
-      db.count_rows('EDA_raw'),
-      db.count_rows('IBI_raw'),
-    ]).then(values => {
-      values.forEach(row_count => {
-        if (row_count < 1000) {
-          thousand_rows = false;
-        }
-      });
-      setEnoughData(thousand_rows);
-    });
-  };
-
-  const deleteRawData = () => {
-    db.delete_ALL_raw_data()
-      .then(result => {
-        //console.log(result);
-        setCleared('CLEARED');
-        props.onResume();
-      })
-      .catch(err => {
-        console.log(err);
-      });
-  };
-
-  const p3_storePrediction = prediction => {
-    db.add_prediction_results(prediction)
-      .then(result => {
-        //console.log(result);
-        return deleteRawData();
-      })
-      .catch(err => {
-        console.log(err);
-      });
-  };
-
-  const p2_sendData = data_array => {
-    const requestOptions = {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: data_array,
-    };
-    fetch('http://e389-34-86-23-50.ngrok.io/predict', requestOptions)
-      .then(async response => {
-        const isJson = response.headers
-          .get('content-type')
-          ?.includes('application/json');
-        const data = isJson && (await response.json());
-
-        // check for error response
-        if (!response.ok) {
-          // get error message from body or default to response status
-          const error = (data && data.message) || response.status;
-          return Promise.reject(error);
-        }
-
-        console.log(data);
-
-        setBPM(data.BPM_average);
-        setEDA(data.EDA_average);
-        setIBI(data.IBI_average);
-        setStress(data.stress_level);
-        return p3_storePrediction(data);
-      })
-      .catch(error => {
-        console.error('There was an error!', error);
-      });
-  };
-
-  const getPrediction = () => {
-    Promise.all([db.getRawEDA(), db.getRawBPM(), db.getRawIBI()]).then(
-      values => {
-        const postJSON = formatRawData(values);
-        return p2_sendData(postJSON);
-      },
-    );
+  const displayPrediction = async () => {
+    try {
+      const predictionJSON = await AsyncStorage.getItem('prediction');
+      if (predictionJSON != null) {
+        const prediction = JSON.parse(predictionJSON);
+        console.log(prediction);
+        setBPM(prediction.BPM_average);
+        setIBI(prediction.IBI_average);
+        setEDA(prediction.EDA_average);
+        setStress(prediction.stress_level);
+      }
+      return true;
+    } catch (error) {
+      console.log(error);
+      return false;
+    }
   };
 
   useEffect(() => {
     const interval = setInterval(() => {
-      checkIfEnoughRows();
-      if (enoughData) {
-        getPrediction();
-      }
-    }, 30000);
+      displayPrediction();
+    }, 20000);
 
     return () => clearInterval(interval);
   });
@@ -138,7 +58,6 @@ const BioDisplay = props => {
           <Text style={styles.stressLevelText}>
             {stress_level == 1 ? 'HIGH' : 'LOW'}
           </Text>
-          <Text style={styles.heartRateText}>{cleared}</Text>
         </>
       </View>
     </SafeAreaView>

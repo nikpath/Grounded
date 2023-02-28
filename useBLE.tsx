@@ -1,5 +1,5 @@
 /* eslint-disable no-bitwise */
-import {useState, useEffect, useRef} from 'react';
+import {useState} from 'react';
 //import {PermissionsAndroid, Platform} from 'react-native';
 import {
   Base64,
@@ -12,7 +12,7 @@ import {
 //import DeviceInfo from 'react-native-device-info';
 
 import {Buffer} from 'buffer';
-import Database from './database/Database.js';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const BIOMETRICS_UUID = '4fafc201-1fb5-459e-8fcc-c5c9c331914b';
 const BPM_CHARACTERISTIC = 'beb5483e-36e1-4688-b7f5-ea07361b26a8';
@@ -21,7 +21,6 @@ const EDA_CHARACTERISTIC = '58260ca5-a468-496a-8f8c-ad30a21ba7cf';
 const PAUSE_CHARACTERISTIC = '885bccf9-007a-4050-aa92-a9da38199deb';
 
 const bleManager = new BleManager();
-const db = new Database();
 
 type VoidCallback = (result: boolean) => void;
 
@@ -32,17 +31,12 @@ interface BluetoothLowEnergyApi {
   disconnectFromDevice: () => void;
   connectedDevice: Device | null;
   allDevices: Device[];
-  writeToBiometrics(device: Device, writeValue: Base64): void;
+  pauseBiometrics(device: Device, writeValue: Base64): void;
 }
 
 function useBLE(): BluetoothLowEnergyApi {
   const [allDevices, setAllDevices] = useState<Device[]>([]);
   const [connectedDevice, setConnectedDevice] = useState<Device | null>(null);
-  //const [beatsPerMinute, setBPM] = useState<number>(0);
-  //const [interBeatInterval, setIBI] = useState<number>(0);
-  //const [skinConductance, setEDA] = useState<number>(0);
-
-  //const didMount = useRef(false);
 
   const requestPermissions = async (cb: VoidCallback) => {
     /*if (Platform.OS === 'android') {
@@ -82,7 +76,7 @@ function useBLE(): BluetoothLowEnergyApi {
     // }
   };
 
-  const isDuplicteDevice = (devices: Device[], nextDevice: Device) =>
+  const isDuplicateDevice = (devices: Device[], nextDevice: Device) =>
     devices.findIndex(device => nextDevice.id === device.id) > -1;
 
   const scanForPeripherals = () =>
@@ -92,7 +86,7 @@ function useBLE(): BluetoothLowEnergyApi {
       }
       if (device && device.name?.includes('Grounded_wearable_1')) {
         setAllDevices((prevState: Device[]) => {
-          if (!isDuplicteDevice(prevState, device)) {
+          if (!isDuplicateDevice(prevState, device)) {
             return [...prevState, device];
           }
           return prevState;
@@ -116,26 +110,48 @@ function useBLE(): BluetoothLowEnergyApi {
     if (connectedDevice) {
       bleManager.cancelDeviceConnection(connectedDevice.id);
       setConnectedDevice(null);
-      // setBPM(0);
-      // setIBI(0);
-      // setEDA(0);
     }
   };
 
-  const writeToBiometrics = (device: Device) => {
-    var writeValue = 'unPause';
+  const pauseBiometrics = (device: Device, value) => {
+    var writeValue = Buffer.from(value).toString('base64');
     device
       .writeCharacteristicWithResponseForService(
         BIOMETRICS_UUID,
         PAUSE_CHARACTERISTIC,
         writeValue,
       )
-      .then(value => console.log(value))
+      .then(response => console.log(response))
       .catch(err => console.log(err));
   };
 
   const convertRawData = rawData => {
     return Buffer.from(rawData, 'base64').readUint32LE();
+  };
+
+  const storeData_p2 = async (data_array, storage_key) => {
+    try {
+      await AsyncStorage.setItem(storage_key, JSON.stringify(data_array));
+      console.log('hee');
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const storeData_p1 = async (new_data, storage_key) => {
+    try {
+      await AsyncStorage.getItem(storage_key, (err, jsonValue) => {
+        if (err) {
+          console.log(err);
+        } else {
+          let data_array = jsonValue != null ? JSON.parse(jsonValue) : []; // parse to modify
+          data_array.push(new_data);
+          storeData_p2(data_array, storage_key);
+        }
+      });
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const onBPMUpdate = (
@@ -149,14 +165,7 @@ function useBLE(): BluetoothLowEnergyApi {
       console.log('No BPM was received');
       return -1;
     } else {
-      console.log(convertRawData(characteristic.value));
-      db.add_BPM_raw(convertRawData(characteristic.value))
-        .then(result => {
-          //console.log(result);
-        })
-        .catch(err => {
-          console.log(err);
-        });
+      storeData_p1(convertRawData(characteristic.value), 'BPM');
     }
   };
 
@@ -171,13 +180,7 @@ function useBLE(): BluetoothLowEnergyApi {
       console.log('No IBI was received');
       return -1;
     }
-    db.add_IBI_raw(convertRawData(characteristic.value))
-      .then(result => {
-        //console.log(result);
-      })
-      .catch(err => {
-        console.log(err);
-      });
+    storeData_p1(convertRawData(characteristic.value), 'IBI');
   };
 
   const onEDAUpdate = (
@@ -191,13 +194,7 @@ function useBLE(): BluetoothLowEnergyApi {
       console.log('No EDA was received');
       return -1;
     }
-    db.add_EDA_raw(convertRawData(characteristic.value))
-      .then(result => {
-        //console.log(result);
-      })
-      .catch(err => {
-        console.log(err);
-      });
+    storeData_p1(convertRawData(characteristic.value), 'EDA');
   };
 
   const startStreamingData = async (device: Device) => {
@@ -229,7 +226,7 @@ function useBLE(): BluetoothLowEnergyApi {
     allDevices,
     connectedDevice,
     disconnectFromDevice,
-    writeToBiometrics,
+    pauseBiometrics,
   };
 }
 

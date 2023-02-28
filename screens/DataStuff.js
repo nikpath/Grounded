@@ -1,7 +1,7 @@
 import React from 'react';
 import Section from '../components/Section.js';
 import Database from '../database/Database.js';
-import groundedAPI from '../components/GroundedAPI.tsx';
+import groundedAPI from '../useGrounded.tsx';
 
 import {
   SafeAreaView,

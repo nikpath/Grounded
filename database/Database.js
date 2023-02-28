@@ -80,14 +80,19 @@ export default class Database {
     }
   }
 
-  add_BPM_raw(beatsPerMinute) {
+  add_BPM_raw(BPMArray) {
+    const SQLString = '';
+    BPMArray.forEach(val => {
+      SQLString.concat(
+        'INSERT INTO BPM_raw (beats_per_minute) VALUES (' + val + ');',
+      );
+    });
+    console.log(SQLString);
     return new Promise(resolve => {
       this.initDB()
         .then(db => {
           db.transaction(tx => {
-            tx.executeSql('INSERT INTO BPM_raw (beats_per_minute) VALUES (?)', [
-              beatsPerMinute,
-            ]).then(([tx, results]) => {
+            tx.executeSql(SQLString).then(([tx, results]) => {
               resolve(results);
             });
           })
