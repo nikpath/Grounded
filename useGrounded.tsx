@@ -37,7 +37,7 @@ function GroundedAPI(): groundedPredictionAPI {
       headers: {'Content-Type': 'application/json'},
       body: data_array,
     };
-    fetch('http://5eac-34-85-224-132.ngrok.io/predict', requestOptions)
+    fetch(' http://ce18-34-147-74-110.ngrok.io/predict', requestOptions)
       .then(async response => {
         const isJson = response.headers
           .get('content-type')

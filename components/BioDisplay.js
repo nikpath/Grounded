@@ -8,6 +8,7 @@ import {
   View,
   Button,
   SafeAreaView,
+  TouchableOpacity,
 } from 'react-native';
 
 import {Colors} from 'react-native/Libraries/NewAppScreen';
@@ -46,20 +47,30 @@ const BioDisplay = props => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.heartRateTitleWrapper}>
-        <>
-          <Text style={styles.heartRateTitleText}>BPM:</Text>
-          <Text style={styles.heartRateText}>{BPM_average}</Text>
-          <Text style={styles.heartRateTitleText}>IBI:</Text>
-          <Text style={styles.heartRateText}>{IBI_average}</Text>
-          <Text style={styles.heartRateTitleText}>EDA:</Text>
-          <Text style={styles.heartRateText}>{EDA_average}</Text>
-          <Text style={styles.heartRateTitleText}>Your stress level is:</Text>
-          <Text style={styles.stressLevelText}>
-            {stress_level == 1 ? 'HIGH' : 'LOW'}
-          </Text>
-        </>
-      </View>
+      {stress_level == 0 ? (
+        <View style={styles.heartRateTitleWrapper}>
+          <>
+            <Text style={styles.heartRateTitleText}>BPM:</Text>
+            <Text style={styles.heartRateText}>{BPM_average}</Text>
+            <Text style={styles.heartRateTitleText}>IBI:</Text>
+            <Text style={styles.heartRateText}>{IBI_average}</Text>
+            <Text style={styles.heartRateTitleText}>EDA:</Text>
+            <Text style={styles.heartRateText}>{EDA_average}</Text>
+            <Text style={styles.heartRateTitleText}>Your stress level is:</Text>
+            <Text style={styles.stressLevelText}>
+              {stress_level == 1 ? 'HIGH' : 'LOW'}
+            </Text>
+          </>
+        </View>
+      ) : (
+        <View style={styles.heartRateTitleWrapper}>
+          <>
+            <Text style={styles.heartRateTitleText}>
+              It seems your stress level is elevated. Use a grounding technique:
+            </Text>
+          </>
+        </View>
+      )}
     </SafeAreaView>
   );
 };

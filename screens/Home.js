@@ -26,7 +26,7 @@ const Home = () => {
     connectToDevice,
     connectedDevice,
     disconnectFromDevice,
-    pauseBiometrics,
+    writeToBiometrics,
   } = useBLE();
 
   const {getRawData, checkIfEnoughRows, getPrediction, resetRawData} =
@@ -52,7 +52,7 @@ const Home = () => {
         const rawData = await getRawData();
         if (checkIfEnoughRows(rawData) == true) {
           console.log('enough rows');
-          pauseBiometrics(connectedDevice, '1');
+          writeToBiometrics(connectedDevice, '1');
           const current_prediction = getPrediction(rawData);
           console.log(current_prediction);
           const reset = await resetRawData();

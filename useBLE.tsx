@@ -31,7 +31,7 @@ interface BluetoothLowEnergyApi {
   disconnectFromDevice: () => void;
   connectedDevice: Device | null;
   allDevices: Device[];
-  pauseBiometrics(device: Device, writeValue: Base64): void;
+  writeToBiometrics(device: Device, writeValue: Base64): void;
 }
 
 function useBLE(): BluetoothLowEnergyApi {
@@ -113,7 +113,7 @@ function useBLE(): BluetoothLowEnergyApi {
     }
   };
 
-  const pauseBiometrics = (device: Device, value) => {
+  const writeToBiometrics = (device: Device, value) => {
     var writeValue = Buffer.from(value).toString('base64');
     device
       .writeCharacteristicWithResponseForService(
@@ -226,7 +226,7 @@ function useBLE(): BluetoothLowEnergyApi {
     allDevices,
     connectedDevice,
     disconnectFromDevice,
-    pauseBiometrics,
+    writeToBiometrics,
   };
 }
 
