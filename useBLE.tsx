@@ -15,8 +15,7 @@ import {Buffer} from 'buffer';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const BIOMETRICS_UUID = '4fafc201-1fb5-459e-8fcc-c5c9c331914b';
-const BPM_CHARACTERISTIC = 'beb5483e-36e1-4688-b7f5-ea07361b26a8';
-const IBI_CHARACTERISTIC = '98260937-1924-4af9-a874-3ad204344e1e';
+const HR_CHARACTERISTIC = 'beb5483e-36e1-4688-b7f5-ea07361b26a8';
 const EDA_CHARACTERISTIC = '58260ca5-a468-496a-8f8c-ad30a21ba7cf';
 const PAUSE_CHARACTERISTIC = '885bccf9-007a-4050-aa92-a9da38199deb';
 
@@ -154,7 +153,7 @@ function useBLE(): BluetoothLowEnergyApi {
     }
   };
 
-  const onBPMUpdate = (
+  const onHRUpdate = (
     error: BleError | null,
     characteristic: Characteristic | null,
   ) => {
@@ -162,25 +161,11 @@ function useBLE(): BluetoothLowEnergyApi {
       console.log(error);
       return -1;
     } else if (!characteristic?.value) {
-      console.log('No BPM was received');
+      console.log('No HR was received');
       return -1;
     } else {
-      storeData_p1(convertRawData(characteristic.value), 'BPM');
+      storeData_p1(convertRawData(characteristic.value), 'HR');
     }
-  };
-
-  const onIBIUpdate = (
-    error: BleError | null,
-    characteristic: Characteristic | null,
-  ) => {
-    if (error) {
-      console.log(error);
-      return -1;
-    } else if (!characteristic?.value) {
-      console.log('No IBI was received');
-      return -1;
-    }
-    storeData_p1(convertRawData(characteristic.value), 'IBI');
   };
 
   const onEDAUpdate = (
@@ -201,13 +186,8 @@ function useBLE(): BluetoothLowEnergyApi {
     if (device) {
       device.monitorCharacteristicForService(
         BIOMETRICS_UUID,
-        BPM_CHARACTERISTIC,
-        (error, characteristic) => onBPMUpdate(error, characteristic),
-      );
-      device.monitorCharacteristicForService(
-        BIOMETRICS_UUID,
-        IBI_CHARACTERISTIC,
-        (error, characteristic) => onIBIUpdate(error, characteristic),
+        HR_CHARACTERISTIC,
+        (error, characteristic) => onHRUpdate(error, characteristic),
       );
       device.monitorCharacteristicForService(
         BIOMETRICS_UUID,

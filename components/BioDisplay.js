@@ -1,5 +1,6 @@
 import React, {useState, useEffect, useCallback} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import useBLE from '../useBLE';
 
 import {
   StyleSheet,
@@ -29,6 +30,12 @@ const BioDisplay = props => {
         setIBI(prediction.IBI_average);
         setEDA(prediction.EDA_average);
         setStress(prediction.stress_level);
+      } else {
+        console.log('is null');
+        setBPM(0);
+        setIBI(0);
+        setEDA(0);
+        setStress(0);
       }
       return true;
     } catch (error) {
@@ -45,34 +52,43 @@ const BioDisplay = props => {
     return () => clearInterval(interval);
   });
 
-  return (
-    <SafeAreaView style={styles.container}>
-      {stress_level == 0 ? (
-        <View style={styles.heartRateTitleWrapper}>
-          <>
-            <Text style={styles.heartRateTitleText}>BPM:</Text>
-            <Text style={styles.heartRateText}>{BPM_average}</Text>
-            <Text style={styles.heartRateTitleText}>IBI:</Text>
-            <Text style={styles.heartRateText}>{IBI_average}</Text>
-            <Text style={styles.heartRateTitleText}>EDA:</Text>
-            <Text style={styles.heartRateText}>{EDA_average}</Text>
-            <Text style={styles.heartRateTitleText}>Your stress level is:</Text>
-            <Text style={styles.stressLevelText}>
-              {stress_level == 1 ? 'HIGH' : 'LOW'}
-            </Text>
-          </>
-        </View>
-      ) : (
-        <View style={styles.heartRateTitleWrapper}>
-          <>
-            <Text style={styles.heartRateTitleText}>
-              It seems your stress level is elevated. Use a grounding technique:
-            </Text>
-          </>
-        </View>
-      )}
-    </SafeAreaView>
-  );
+  if (props.bls_on && stress_level == 1) {
+    return (
+      <View style={styles.heartRateTitleWrapper}>
+        <>
+          <Text style={styles.heartRateTitleText}>
+            Breathe in slowly and focus on the left-right movement of the
+            vibrations.
+          </Text>
+        </>
+      </View>
+    );
+  } else if (!props.bls_on && stress_level == 1) {
+    return (
+      <View style={styles.heartRateTitleWrapper}>
+        <>
+          <Text style={styles.heartRateTitleText}>
+            It seems your stress level is elevated. Try one of the grounding
+            techniques to relax:
+          </Text>
+        </>
+      </View>
+    );
+  } else {
+    return (
+      <View style={styles.heartRateTitleWrapper}>
+        <>
+          <Text style={styles.heartRateTitleText}>BPM:</Text>
+          <Text style={styles.heartRateText}>{BPM_average}</Text>
+          <Text style={styles.heartRateTitleText}>Your stress level is:</Text>
+          <Text style={styles.stressLevelText}>
+            {stress_level == 1 ? 'HIGH' : 'LOW'}
+          </Text>
+          <Text style={styles.heartRateTitleText}>{props.bls_on}</Text>
+        </>
+      </View>
+    );
+  }
 };
 
 const styles = StyleSheet.create({
@@ -84,6 +100,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    height: '70%',
   },
   heartRateTitleText: {
     fontSize: 30,
