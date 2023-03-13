@@ -10,10 +10,12 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "@react-native-async-storage/async-storage": "^1.17.11",
     "@react-navigation/native": "^6.1.1",
     "@react-navigation/native-stack": "^6.9.7",
     "react": "18.1.0",
     "react-native": "0.70.6",
+    "react-native-background-actions": "^3.0.0",
     "react-native-ble-plx": "^2.0.3",
     "react-native-device-info": "^10.3.0",
     "react-native-permissions": "^3.6.1",

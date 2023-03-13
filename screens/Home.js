@@ -1,4 +1,5 @@
-import React from 'react';
+import * as React from 'react';
+import {useState, useEffect, useRef} from 'react';
 
 import {
   SafeAreaView,
@@ -6,10 +7,17 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Platform,
+  ScrollView,
 } from 'react-native';
-import NavMenu from '../components/NavMenu';
 import DeviceModal from '../DeviceConnectionModal';
+import BioDisplay from '../components/BioDisplay';
 import useBLE from '../useBLE';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import BackgroundJob from 'react-native-background-actions';
+import useGrounded from '../useGrounded';
+
+const sleep = time => new Promise(resolve => setTimeout(() => resolve(), time));
 
 const Home = () => {
   const {
@@ -18,12 +26,66 @@ const Home = () => {
     allDevices,
     connectToDevice,
     connectedDevice,
-    beatsPerMinute,
-    interBeatInterval,
-    skinConductance,
     disconnectFromDevice,
+    writeToBiometrics,
+    BLEClients,
   } = useBLE();
-  const [isModalVisible, setIsModalVisible] = React.useState(false);
+
+  const {getRawData, checkIfEnoughRows, getPrediction, resetRawData} =
+    useGrounded();
+
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [inBLS, setInBLS] = useState(false);
+  const [timerID, setTimerID] = useState(0);
+
+  BackgroundJob.on('expiration', () => {
+    console.log('iOS: I am being closed!');
+  });
+
+  const pollData = async taskData => {
+    if (Platform.OS === 'ios') {
+      console.warn(
+        'This task will not keep your app alive in the background by itself, use other library like react-native-track-player that use audio,',
+        'geolocalization, etc. to keep your app alive in the background while you excute the JS from this library.',
+      );
+    }
+    await new Promise(async resolve => {
+      // For loop with a delay
+      const {delay} = taskData;
+      for (let i = 0; BackgroundJob.isRunning(); i++) {
+        console.log('background action');
+        const rawData = await getRawData();
+        console.log(rawData);
+        if (checkIfEnoughRows(rawData) == true) {
+          writeToBiometrics(connectedDevice, '3');
+          const current_prediction = getPrediction(rawData);
+          const reset = await resetRawData();
+          if (reset == true) {
+            console.log('was reset');
+            //TODO: resume polling or give stress options
+            writeToBiometrics(connectedDevice, '4');
+          }
+          //TODO: send notification if stress level is high
+        }
+        await sleep(delay);
+      }
+    });
+  };
+
+  const options = {
+    taskName: 'Example',
+    taskTitle: 'ExampleTask title',
+    taskDesc: 'ExampleTask desc',
+    taskIcon: {
+      name: 'ic_launcher',
+      type: 'mipmap',
+    },
+    color: '#ff00ff',
+    linkingURI: 'exampleScheme://chat/jane',
+    parameters: {
+      delay: 10000,
+    },
+  };
 
   const scanForDevices = () => {
     requestPermissions(isGranted => {
@@ -42,43 +104,129 @@ const Home = () => {
     setIsModalVisible(true);
   };
 
+  let playing = BackgroundJob.isRunning();
+
+  const toggleBackground = async () => {
+    playing = !playing;
+    if (playing) {
+      try {
+        console.log('Trying to start background service');
+        await BackgroundJob.start(pollData, options);
+        console.log('Successful start!');
+      } catch (e) {
+        console.log('Error', e);
+      }
+    } else {
+      console.log('Stop background service');
+      await BackgroundJob.stop();
+    }
+  };
+
+  const pauseBLS = () => {
+    writeToBiometrics(connectedDevice, '6');
+    setInBLS(false);
+    if (timerID) {
+      clearTimeout(timerID);
+      setTimerID(0);
+      return;
+    }
+  };
+
+  const startBLS = () => {
+    writeToBiometrics(connectedDevice, '5');
+    setInBLS(true);
+    const newTimerID = setTimeout(pauseBLS, 60000);
+    setTimerID(newTimerID);
+  };
+
+  const toggleBLS = () => {
+    if (!inBLS) {
+      startBLS();
+    } else {
+      pauseBLS();
+    }
+  };
+
+  const breathingVizOn = () => {
+    console.log('breathing viz stuff');
+  };
+
+  const clearAsyncData = async () => {
+    try {
+      await AsyncStorage.clear();
+    } catch (e) {
+      // clear error
+      console.log(e);
+    }
+
+    console.log('Done.');
+  };
+
   /* $FlowFixMe[missing-local-annot] The type annotation(s) required by Flow's
    * LTI update could not be added via codemod */
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.heartRateTitleWrapper}>
+      <ScrollView>
         {connectedDevice ? (
-          <>
-            <Text style={styles.heartRateTitleText}>BPM:</Text>
-            <Text style={styles.heartRateText}>{beatsPerMinute}</Text>
-            <Text style={styles.heartRateTitleText}>IBI:</Text>
-            <Text style={styles.heartRateText}>{interBeatInterval}</Text>
-            <Text style={styles.heartRateTitleText}>EDA:</Text>
-            <Text style={styles.heartRateText}>{skinConductance}</Text>
-            <Text style={styles.heartRateTitleText}>Your stress level is:</Text>
-            <Text style={styles.stressLevelText}>LOW</Text>
-          </>
+          <View style={styles.heartRateTitleWrapper}>
+            <Text style={styles.heartRateText}>
+              Devices connected: {BLEClients}
+            </Text>
+            <BioDisplay bls_on={inBLS} />
+          </View>
         ) : (
-          <Text style={styles.heartRateTitleText}>
-            Start by connecting your Grounded wearables.
-          </Text>
+          <View style={styles.heartRateTitleWrapper}>
+            <Text style={styles.heartRateText}>
+              Start by connecting your Grounded wearables.
+            </Text>
+          </View>
         )}
-      </View>
-      <TouchableOpacity
-        onPress={connectedDevice ? disconnectFromDevice : openModal}
-        style={styles.ctaButton}>
-        <Text style={styles.ctaButtonText}>
-          {connectedDevice ? 'Disconnect' : 'Connect'}
-        </Text>
-      </TouchableOpacity>
-      <DeviceModal
-        closeModal={hideModal}
-        visible={isModalVisible}
-        connectToPeripheral={connectToDevice}
-        devices={allDevices}
-      />
-      <NavMenu />
+        <View style={styles.heartRateTitleWrapper}>
+          <TouchableOpacity
+            onPress={connectedDevice ? disconnectFromDevice : openModal}
+            style={styles.ctaButton}>
+            <Text style={styles.ctaButtonText}>
+              {connectedDevice ? 'Disconnect' : 'Connect'}
+            </Text>
+          </TouchableOpacity>
+          <DeviceModal
+            closeModal={hideModal}
+            visible={isModalVisible}
+            connectToPeripheral={connectToDevice}
+            devices={allDevices}
+          />
+          <TouchableOpacity
+            onPress={toggleBackground}
+            style={
+              connectedDevice ? styles.ctaButton : styles.ctaButton_disabled
+            }
+            disabled={connectedDevice ? false : true}>
+            <Text style={styles.ctaButtonText}>Start</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.heartRateTitleWrapper}>
+          <TouchableOpacity onPress={toggleBLS} style={styles.ctaButton}>
+            <Text style={styles.ctaButtonText}>
+              {inBLS ? 'Stop BLS' : 'Start BLS'}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={breathingVizOn} style={styles.ctaButton}>
+            <Text style={styles.ctaButtonText}>Breathing exercises</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.heartRateTitleWrapper}>
+          <TouchableOpacity onPress={getRawData} style={styles.ctaButton}>
+            <Text style={styles.ctaButtonText}>get async storage</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={getPrediction} style={styles.ctaButton}>
+            <Text style={styles.ctaButtonText}>Predict</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={clearAsyncData} style={styles.ctaButton}>
+            <Text style={styles.ctaButtonText}>clear async storage</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -90,8 +238,9 @@ const styles = StyleSheet.create({
   },
   heartRateTitleWrapper: {
     flex: 1,
+    flexDirection: 'column',
     justifyContent: 'center',
-    alignItems: 'center',
+    padding: 20,
   },
   heartRateTitleText: {
     fontSize: 30,
@@ -118,10 +267,22 @@ const styles = StyleSheet.create({
     marginBottom: 5,
     borderRadius: 8,
   },
+  ctaButton_disabled: {
+    backgroundColor: '#949494',
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: 50,
+    marginHorizontal: 20,
+    marginBottom: 5,
+    borderRadius: 8,
+  },
   ctaButtonText: {
     fontSize: 18,
     fontWeight: 'bold',
     color: 'black',
+  },
+  scrollView: {
+    marginHorizontal: 20,
   },
 });
 
