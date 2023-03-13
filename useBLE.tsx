@@ -17,7 +17,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const BIOMETRICS_UUID = '4fafc201-1fb5-459e-8fcc-c5c9c331914b';
 const HR_CHARACTERISTIC = 'beb5483e-36e1-4688-b7f5-ea07361b26a8';
 const EDA_CHARACTERISTIC = '58260ca5-a468-496a-8f8c-ad30a21ba7cf';
-const PAUSE_CHARACTERISTIC = '885bccf9-007a-4050-aa92-a9da38199deb';
+const CONTROL_CHARACTERISTIC = '885bccf9-007a-4050-aa92-a9da38199deb';
 
 const bleManager = new BleManager();
 
@@ -31,11 +31,13 @@ interface BluetoothLowEnergyApi {
   connectedDevice: Device | null;
   allDevices: Device[];
   writeToBiometrics(device: Device, writeValue: Base64): void;
+  BLEClients: Number | null;
 }
 
 function useBLE(): BluetoothLowEnergyApi {
   const [allDevices, setAllDevices] = useState<Device[]>([]);
   const [connectedDevice, setConnectedDevice] = useState<Device | null>(null);
+  const [BLEClients, setBLEClients] = useState<Number>(0);
 
   const requestPermissions = async (cb: VoidCallback) => {
     /*if (Platform.OS === 'android') {
@@ -117,7 +119,7 @@ function useBLE(): BluetoothLowEnergyApi {
     device
       .writeCharacteristicWithResponseForService(
         BIOMETRICS_UUID,
-        PAUSE_CHARACTERISTIC,
+        CONTROL_CHARACTERISTIC,
         writeValue,
       )
       .then(response => console.log(response))
@@ -131,7 +133,7 @@ function useBLE(): BluetoothLowEnergyApi {
   const storeData_p2 = async (data_array, storage_key) => {
     try {
       await AsyncStorage.setItem(storage_key, JSON.stringify(data_array));
-      console.log('hee');
+      //console.log('hee');
     } catch (error) {
       console.error(error);
     }
@@ -164,6 +166,7 @@ function useBLE(): BluetoothLowEnergyApi {
       console.log('No HR was received');
       return -1;
     } else {
+      console.log('he');
       storeData_p1(convertRawData(characteristic.value), 'HR');
     }
   };
@@ -182,6 +185,21 @@ function useBLE(): BluetoothLowEnergyApi {
     storeData_p1(convertRawData(characteristic.value), 'EDA');
   };
 
+  const onConnectionUpdate = (
+    error: BleError | null,
+    characteristic: Characteristic | null,
+  ) => {
+    if (error) {
+      console.log(error);
+      return -1;
+    } else if (!characteristic?.value) {
+      console.log('No value was received');
+      return -1;
+    }
+    console.log(convertRawData(characteristic.value));
+    setBLEClients(convertRawData(characteristic.value));
+  };
+
   const startStreamingData = async (device: Device) => {
     if (device) {
       device.monitorCharacteristicForService(
@@ -193,6 +211,11 @@ function useBLE(): BluetoothLowEnergyApi {
         BIOMETRICS_UUID,
         EDA_CHARACTERISTIC,
         (error, characteristic) => onEDAUpdate(error, characteristic),
+      );
+      device.monitorCharacteristicForService(
+        BIOMETRICS_UUID,
+        CONTROL_CHARACTERISTIC,
+        (error, characteristic) => onConnectionUpdate(error, characteristic),
       );
     } else {
       console.log('No Device Connected');
@@ -207,6 +230,7 @@ function useBLE(): BluetoothLowEnergyApi {
     connectedDevice,
     disconnectFromDevice,
     writeToBiometrics,
+    BLEClients,
   };
 }
 

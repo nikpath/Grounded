@@ -28,6 +28,7 @@ const Home = () => {
     connectedDevice,
     disconnectFromDevice,
     writeToBiometrics,
+    BLEClients,
   } = useBLE();
 
   const {getRawData, checkIfEnoughRows, getPrediction, resetRawData} =
@@ -56,12 +57,13 @@ const Home = () => {
         const rawData = await getRawData();
         console.log(rawData);
         if (checkIfEnoughRows(rawData) == true) {
-          writeToBiometrics(connectedDevice, '1');
+          writeToBiometrics(connectedDevice, '3');
           const current_prediction = getPrediction(rawData);
           const reset = await resetRawData();
           if (reset == true) {
             console.log('was reset');
             //TODO: resume polling or give stress options
+            writeToBiometrics(connectedDevice, '4');
           }
           //TODO: send notification if stress level is high
         }
@@ -121,7 +123,7 @@ const Home = () => {
   };
 
   const pauseBLS = () => {
-    writeToBiometrics(connectedDevice, '4');
+    writeToBiometrics(connectedDevice, '6');
     setInBLS(false);
     if (timerID) {
       clearTimeout(timerID);
@@ -131,7 +133,7 @@ const Home = () => {
   };
 
   const startBLS = () => {
-    writeToBiometrics(connectedDevice, '3');
+    writeToBiometrics(connectedDevice, '5');
     setInBLS(true);
     const newTimerID = setTimeout(pauseBLS, 60000);
     setTimerID(newTimerID);
@@ -168,7 +170,9 @@ const Home = () => {
       <ScrollView>
         {connectedDevice ? (
           <View style={styles.heartRateTitleWrapper}>
-            <Text style={styles.heartRateText}>Device connected</Text>
+            <Text style={styles.heartRateText}>
+              Devices connected: {BLEClients}
+            </Text>
             <BioDisplay bls_on={inBLS} />
           </View>
         ) : (
