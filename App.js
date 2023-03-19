@@ -13,7 +13,6 @@ import Home from './screens/Home.js';
 import Techniques from './screens/Techniques.js';
 import History from './screens/History.js';
 import About from './screens/About.js';
-import DataStuff from './screens/DataStuff.js';
 import NavMenu from './components/NavMenu.js';
 import {
   SafeAreaView,
@@ -33,7 +32,6 @@ const App = () => {
         <Stack.Screen name="Techniques" component={Techniques} />
         <Stack.Screen name="History" component={History} />
         <Stack.Screen name="About" component={About} />
-        <Stack.Screen name="Data" component={DataStuff} />
       </Stack.Navigator>
     </NavigationContainer>
   );

@@ -166,7 +166,7 @@ function useBLE(): BluetoothLowEnergyApi {
       console.log('No HR was received');
       return -1;
     } else {
-      console.log('he');
+      console.log('polling');
       storeData_p1(convertRawData(characteristic.value), 'HR');
     }
   };
