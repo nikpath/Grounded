@@ -11,6 +11,7 @@ import {
   ScrollView,
   Alert,
 } from 'react-native';
+import {Icon} from '@rneui/themed';
 import DeviceModal from '../DeviceConnectionModal';
 import BioDisplay from '../components/BioDisplay';
 import useBLE from '../useBLE';
@@ -178,6 +179,20 @@ const Home = () => {
     console.log('Done.');
   };
 
+  const PairScreen = () => {
+    return (
+      <View style={styles.subContainerWrapper}>
+        <Text style={styles.heartRateText}>
+          Start by connecting your Grounded wearables.
+        </Text>
+        <TouchableOpacity onPress={openModal} style={styles.pairButton}>
+          <Icon name="socks" type="font-awesome-5" color="#d6e577" size={50} />
+          <Text>Pair Devices</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
   /* $FlowFixMe[missing-local-annot] The type annotation(s) required by Flow's
    * LTI update could not be added via codemod */
 
@@ -192,11 +207,7 @@ const Home = () => {
             <BioDisplay bls_on={inBLS} />
           </View>
         ) : (
-          <View style={styles.heartRateTitleWrapper}>
-            <Text style={styles.heartRateText}>
-              Start by connecting your Grounded wearables.
-            </Text>
-          </View>
+          <PairScreen />
         )}
         <View style={styles.heartRateTitleWrapper}>
           <TouchableOpacity
@@ -243,6 +254,13 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f2f2f2',
   },
+  subContainerWrapper: {
+    flex: 1,
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
   heartRateTitleWrapper: {
     flex: 1,
     flexDirection: 'column',
@@ -287,6 +305,16 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: 'black',
+  },
+  pairButton: {
+    borderWidth: 1,
+    borderColor: '#d6e577',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 150,
+    height: 150,
+    backgroundColor: '#fff',
+    borderRadius: 75,
   },
   scrollView: {
     marginHorizontal: 20,
