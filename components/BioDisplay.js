@@ -17,7 +17,7 @@ import {Colors} from 'react-native/Libraries/NewAppScreen';
 const BioDisplay = props => {
   const [BPM_average, setBPM] = useState(0);
   const [EDA_average, setEDA] = useState(0);
-  const [IBI_average, setIBI] = useState(0);
+  const [HRV_average, setHRV] = useState(0);
   const [stress_level, setStress] = useState(0);
 
   const displayPrediction = async () => {
@@ -27,13 +27,13 @@ const BioDisplay = props => {
         const prediction = JSON.parse(predictionJSON);
         console.log(prediction);
         setBPM(prediction.BPM_average);
-        setIBI(prediction.IBI_average);
         setEDA(prediction.EDA_average);
+        setHRV(prediction.HRV_average);
         setStress(prediction.stress_level);
       } else {
         console.log('is null');
         setBPM(0);
-        setIBI(0);
+        setHRV(0);
         setEDA(0);
         setStress(0);
       }
