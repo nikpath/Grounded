@@ -9,6 +9,7 @@ import {
   View,
   Platform,
   ScrollView,
+  Alert,
 } from 'react-native';
 import DeviceModal from '../DeviceConnectionModal';
 import BioDisplay from '../components/BioDisplay';
@@ -42,7 +43,21 @@ const Home = () => {
     console.log('iOS: I am being closed!');
   });
 
+  const createStressAlert = () =>
+    Alert.alert(
+      'High Stress Detected',
+      'It seems your stress level is elevated. Try a grounding technique to feel calmer.',
+      [
+        {
+          text: 'BLS',
+          onPress: () => console.log('BLS Pressed'),
+        },
+        {text: 'Breathing', onPress: () => console.log('Breathing Pressed')},
+      ],
+    );
+
   const pollData = async taskData => {
+    //background action for continously sending and recieving prediction updates
     if (Platform.OS === 'ios') {
       console.warn(
         'This task will not keep your app alive in the background by itself, use other library like react-native-track-player that use audio,',
@@ -56,7 +71,7 @@ const Home = () => {
         console.log('background action');
         const rawData = await getRawData();
         console.log(rawData);
-        if (checkIfEnoughRows(rawData) == true) {
+        if (checkIfEnoughRows(rawData) === true) {
           writeToBiometrics(connectedDevice, '3');
           const current_prediction = getPrediction(rawData);
           const reset = await resetRawData();
@@ -64,6 +79,11 @@ const Home = () => {
             console.log('was reset');
             //TODO: resume polling or give stress options
             writeToBiometrics(connectedDevice, '4');
+          }
+          if (current_prediction) {
+            if (current_prediction.stress_level === 1) {
+              createStressAlert();
+            }
           }
           //TODO: send notification if stress level is high
         }
@@ -147,10 +167,6 @@ const Home = () => {
     }
   };
 
-  const breathingVizOn = () => {
-    console.log('breathing viz stuff');
-  };
-
   const clearAsyncData = async () => {
     try {
       await AsyncStorage.clear();
@@ -211,19 +227,10 @@ const Home = () => {
               {inBLS ? 'Stop BLS' : 'Start BLS'}
             </Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={breathingVizOn} style={styles.ctaButton}>
+          <TouchableOpacity
+            onPress={createStressAlert}
+            style={styles.ctaButton}>
             <Text style={styles.ctaButtonText}>Breathing exercises</Text>
-          </TouchableOpacity>
-        </View>
-        <View style={styles.heartRateTitleWrapper}>
-          <TouchableOpacity onPress={getRawData} style={styles.ctaButton}>
-            <Text style={styles.ctaButtonText}>get async storage</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={getPrediction} style={styles.ctaButton}>
-            <Text style={styles.ctaButtonText}>Predict</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={clearAsyncData} style={styles.ctaButton}>
-            <Text style={styles.ctaButtonText}>clear async storage</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
