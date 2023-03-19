@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-inline-styles */
 import React, {FC, useCallback} from 'react';
 import {
   FlatList,
@@ -8,6 +9,7 @@ import {
   StyleSheet,
   TouchableOpacity,
 } from 'react-native';
+import {Icon, Button} from '@rneui/themed';
 import {Device} from 'react-native-ble-plx';
 
 type DeviceModalListItemProps = {
@@ -63,6 +65,17 @@ const DeviceModal: FC<DeviceModalProps> = props => {
       transparent={false}
       visible={visible}>
       <SafeAreaView style={modalStyle.modalTitle}>
+        <Button
+          onPress={closeModal}
+          type="clear"
+          containerStyle={{
+            height: 40,
+            width: 50,
+            marginHorizontal: 300,
+          }}>
+          <Icon name="close" type="material" />
+        </Button>
+
         <Text style={modalStyle.modalTitleText}>
           Tap on a device to connect
         </Text>
