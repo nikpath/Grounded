@@ -39,6 +39,8 @@ const Home = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [inBLS, setInBLS] = useState(false);
   const [timerID, setTimerID] = useState(0);
+  const [isPolling, setIsPolling] = useState(false);
+  const [mockDeviceConnected, setMockDevice] = useState(true);
 
   BackgroundJob.on('expiration', () => {
     console.log('iOS: I am being closed!');
@@ -94,9 +96,9 @@ const Home = () => {
   };
 
   const options = {
-    taskName: 'Example',
-    taskTitle: 'ExampleTask title',
-    taskDesc: 'ExampleTask desc',
+    taskName: 'PeriodicPrediction',
+    taskTitle: 'Periodic update to prediction',
+    taskDesc: 'Periodically sends collected sensor data to prediction API',
     taskIcon: {
       name: 'ic_launcher',
       type: 'mipmap',
@@ -127,7 +129,8 @@ const Home = () => {
 
   let playing = BackgroundJob.isRunning();
 
-  const toggleBackground = async () => {
+  const togglePolling = async () => {
+    setIsPolling(!isPolling);
     playing = !playing;
     if (playing) {
       try {
@@ -182,12 +185,52 @@ const Home = () => {
   const PairScreen = () => {
     return (
       <View style={styles.subContainerWrapper}>
-        <Text style={styles.heartRateText}>
-          Start by connecting your Grounded wearables.
+        <Text style={styles.titleText}>
+          Start by connecting your Grounded wearables:
         </Text>
         <TouchableOpacity onPress={openModal} style={styles.pairButton}>
           <Icon name="socks" type="font-awesome-5" color="#d6e577" size={50} />
-          <Text>Pair Devices</Text>
+          <Text style={styles.pairText}>Pair Devices</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
+  const DeviceControls = () => {
+    return (
+      <View>
+        <View style={styles.textWrapper}>
+          <Text style={styles.normalText}>Devices connected: {BLEClients}</Text>
+        </View>
+        <View style={styles.controlButtonWrapper}>
+          <TouchableOpacity
+            onPress={disconnectFromDevice}
+            style={styles.controlButton}>
+            <Text style={styles.ctaButtonText}>Disconnect</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={togglePolling}
+            style={styles.controlButton}>
+            <Text style={styles.ctaButtonText}>
+              {isPolling ? 'Pause' : 'Start'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  };
+
+  const GroundingTechniques = () => {
+    return (
+      <View style={styles.subContainerWrapper}>
+        <Text style={styles.normalText}>Try a grounding technique</Text>
+        <TouchableOpacity onPress={toggleBLS} style={styles.ctaButton}>
+          <Text style={styles.ctaButtonText}>
+            {inBLS ? 'Stop BLS' : 'Start BLS'}
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={createStressAlert} style={styles.ctaButton}>
+          <Text style={styles.ctaButtonText}>Breathing exercises</Text>
         </TouchableOpacity>
       </View>
     );
@@ -199,50 +242,22 @@ const Home = () => {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView>
-        {connectedDevice ? (
-          <View style={styles.heartRateTitleWrapper}>
-            <Text style={styles.heartRateText}>
-              Devices connected: {BLEClients}
-            </Text>
+        {mockDeviceConnected ? (
+          <View style={styles.connectedContainer}>
+            <DeviceControls />
             <BioDisplay bls_on={inBLS} />
+            <GroundingTechniques />
           </View>
         ) : (
           <PairScreen />
         )}
-        <View style={styles.heartRateTitleWrapper}>
-          <TouchableOpacity
-            onPress={connectedDevice ? disconnectFromDevice : openModal}
-            style={styles.ctaButton}>
-            <Text style={styles.ctaButtonText}>
-              {connectedDevice ? 'Disconnect' : 'Connect'}
-            </Text>
-          </TouchableOpacity>
+        <View style={styles.titleWrapper}>
           <DeviceModal
             closeModal={hideModal}
             visible={isModalVisible}
             connectToPeripheral={connectToDevice}
             devices={allDevices}
           />
-          <TouchableOpacity
-            onPress={toggleBackground}
-            style={
-              connectedDevice ? styles.ctaButton : styles.ctaButton_disabled
-            }
-            disabled={connectedDevice ? false : true}>
-            <Text style={styles.ctaButtonText}>Start</Text>
-          </TouchableOpacity>
-        </View>
-        <View style={styles.heartRateTitleWrapper}>
-          <TouchableOpacity onPress={toggleBLS} style={styles.ctaButton}>
-            <Text style={styles.ctaButtonText}>
-              {inBLS ? 'Stop BLS' : 'Start BLS'}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={createStressAlert}
-            style={styles.ctaButton}>
-            <Text style={styles.ctaButtonText}>Breathing exercises</Text>
-          </TouchableOpacity>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -251,30 +266,53 @@ const Home = () => {
 
 const styles = StyleSheet.create({
   container: {
+    display: 'flex',
     flex: 1,
     backgroundColor: '#f2f2f2',
   },
   subContainerWrapper: {
+    display: 'flex',
     flex: 1,
-    flexDirection: 'column',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: 50,
   },
-  heartRateTitleWrapper: {
+  connectedContainer: {
+    flex: 1,
+    flexDirection: 'column',
+    justifyContent: 'center',
+  },
+  controlButtonWrapper: {
+    flexWrap: 'nowrap',
+    flexDirection: 'row',
+    justifyContent: 'space-evenly',
+  },
+  titleWrapper: {
     flex: 1,
     flexDirection: 'column',
     justifyContent: 'center',
     padding: 20,
   },
-  heartRateTitleText: {
+  textWrapper: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    backgroundColor: '#e4ecb5',
+    padding: 10,
+    borderWidth: 1,
+    borderColor: '#ccd0d1',
+  },
+  titleText: {
     fontSize: 30,
     fontWeight: 'bold',
-    textAlign: 'center',
-    marginHorizontal: 20,
+    marginTop: 15,
     color: 'black',
   },
-  heartRateText: {
+  normalText: {
+    fontSize: 18,
+  },
+  pairText: {
     fontSize: 25,
     marginTop: 15,
   },
@@ -307,14 +345,25 @@ const styles = StyleSheet.create({
     color: 'black',
   },
   pairButton: {
+    margin: '30%',
     borderWidth: 1,
     borderColor: '#d6e577',
     alignItems: 'center',
     justifyContent: 'center',
-    width: 150,
-    height: 150,
+    width: 200,
+    height: 200,
     backgroundColor: '#fff',
-    borderRadius: 75,
+    borderRadius: 100,
+  },
+  controlButton: {
+    borderWidth: 1,
+    borderColor: '#ccd0d1',
+    backgroundColor: '#e4ecb5',
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: 50,
+    marginBottom: 5,
+    width: '50%',
   },
   scrollView: {
     marginHorizontal: 20,
