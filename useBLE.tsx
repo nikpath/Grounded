@@ -166,7 +166,6 @@ function useBLE(): BluetoothLowEnergyApi {
       console.log('No HR was received');
       return -1;
     } else {
-      console.log('he');
       storeData_p1(convertRawData(characteristic.value), 'HR');
     }
   };
@@ -202,6 +201,7 @@ function useBLE(): BluetoothLowEnergyApi {
 
   const startStreamingData = async (device: Device) => {
     if (device) {
+      console.log("polling");
       device.monitorCharacteristicForService(
         BIOMETRICS_UUID,
         HR_CHARACTERISTIC,
