@@ -1,20 +1,10 @@
 import React, {useState, useEffect, useCallback} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import useBLE from '../useBLE';
 
-import {
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-  Button,
-  SafeAreaView,
-  TouchableOpacity,
-} from 'react-native';
+import {StyleSheet, Text, View, SafeAreaView} from 'react-native';
+import {Icon} from '@rneui/themed';
 
-import {Colors} from 'react-native/Libraries/NewAppScreen';
-
-const BioDisplay = props => {
+const BioDisplay = () => {
   const [BPM_average, setBPM] = useState(0);
   const [EDA_average, setEDA] = useState(0);
   const [HRV_average, setHRV] = useState(0);
@@ -27,14 +17,13 @@ const BioDisplay = props => {
         const prediction = JSON.parse(predictionJSON);
         console.log(prediction);
         setBPM(prediction.BPM_average);
-        setEDA(prediction.EDA_average);
-        setHRV(prediction.HRV_average);
+        setEDA(Math.round(prediction.EDA_average));
+        setHRV(Math.round(prediction.HRV_average * 100) / 100);
         setStress(prediction.stress_level);
       } else {
-        console.log('is null');
         setBPM(0);
-        setHRV(0);
         setEDA(0);
+        setHRV(0);
         setStress(0);
       }
       return true;
@@ -47,90 +36,124 @@ const BioDisplay = props => {
   useEffect(() => {
     const interval = setInterval(() => {
       displayPrediction();
-    }, 20000);
+    }, 10000);
 
     return () => clearInterval(interval);
   });
 
-  if (props.bls_on && stress_level == 1) {
-    return (
-      <View style={styles.heartRateTitleWrapper}>
-        <>
-          <Text style={styles.heartRateTitleText}>
-            Breathe in slowly and focus on the left-right movement of the
-            vibrations.
+  return (
+    <View style={styles.subContainerWrapper}>
+      {stress_level == 2 ? (
+        <View style={styles.textWrapper}>
+          <Text style={styles.titleText}>Unable to predict stress level.</Text>
+          <Text style={styles.normalText}>
+            Ensure your skin is touching all three sensor pads. Re-connect the
+            battery if the pulse sensor light is not on. Try again later if
+            problem persists.
           </Text>
-        </>
-      </View>
-    );
-  } else if (!props.bls_on && stress_level == 1) {
-    return (
-      <View style={styles.heartRateTitleWrapper}>
-        <>
-          <Text style={styles.heartRateTitleText}>
-            It seems your stress level is elevated. Try one of the grounding
-            techniques to relax:
-          </Text>
-        </>
-      </View>
-    );
-  } else {
-    return (
-      <View style={styles.heartRateTitleWrapper}>
-        <>
-          <Text style={styles.heartRateTitleText}>BPM:</Text>
-          <Text style={styles.heartRateText}>{BPM_average}</Text>
-          <Text style={styles.heartRateTitleText}>Your stress level is:</Text>
-          <Text style={styles.stressLevelText}>
+        </View>
+      ) : (
+        <View
+          style={
+            stress_level == 0
+              ? styles.stressContainer_low
+              : styles.stressContainer_high
+          }>
+          <Icon
+            name="hand-holding-heart"
+            type="font-awesome-5"
+            color={stress_level == 0 ? '#d6e577' : '#FC9291'}
+            size={70}
+          />
+          <Text style={styles.normalText}>Your stress level is:</Text>
+          <Text style={styles.stressText}>
             {stress_level == 1 ? 'HIGH' : 'LOW'}
           </Text>
-          <Text style={styles.heartRateTitleText}>{props.bls_on}</Text>
-        </>
+        </View>
+      )}
+      <View style={styles.dataContainer}>
+        <View style={styles.dataPiece}>
+          <Text style={styles.normalText}>BPM</Text>
+          <Text style={styles.titleText}>{BPM_average}</Text>
+        </View>
+        <View style={styles.dataPiece}>
+          <Text style={styles.normalText}>EDA</Text>
+          <Text style={styles.titleText}>{EDA_average}</Text>
+        </View>
+        <View style={styles.dataPiece}>
+          <Text style={styles.normalText}>HRV</Text>
+          <Text style={styles.titleText}>{HRV_average}</Text>
+        </View>
       </View>
-    );
-  }
+    </View>
+  );
 };
 
 const styles = StyleSheet.create({
   container: {
+    display: 'flex',
     flex: 1,
     backgroundColor: '#f2f2f2',
   },
-  heartRateTitleWrapper: {
+  subContainerWrapper: {
+    display: 'flex',
     flex: 1,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'center',
     alignItems: 'center',
-    height: '70%',
   },
-  heartRateTitleText: {
+  textWrapper: {
+    margin: 40,
+  },
+  stressContainer_low: {
+    marginTop: '30%',
+    borderWidth: 1,
+    borderColor: '#d6e577',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 200,
+    height: 200,
+    backgroundColor: '#fff',
+    borderRadius: 100,
+  },
+  stressContainer_high: {
+    marginTop: '30%',
+    borderWidth: 1,
+    borderColor: '#FC9291',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 200,
+    height: 200,
+    backgroundColor: '#fff',
+    borderRadius: 100,
+  },
+  dataContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  dataPiece: {
+    flexDirection: 'column',
+    justifyContent: 'center',
+    paddingRight: 30,
+    paddingLeft: 30,
+    paddingBottom: 30,
+    alignItems: 'center',
+  },
+  stressText: {
     fontSize: 30,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginHorizontal: 20,
+    marginTop: 15,
     color: 'black',
   },
-  heartRateText: {
-    fontSize: 25,
-    marginTop: 15,
-  },
-  stressLevelText: {
+  titleText: {
     fontSize: 30,
     marginTop: 15,
-    color: '#d6e577',
+    fontWeight: 'bold',
+    color: 'black',
   },
-  ctaButton: {
-    backgroundColor: '#d6e577',
-    justifyContent: 'center',
-    alignItems: 'center',
-    height: 50,
-    marginHorizontal: 20,
-    marginBottom: 5,
-    borderRadius: 8,
-  },
-  ctaButtonText: {
+  normalText: {
+    marginTop: 15,
     fontSize: 18,
-    fontWeight: 'bold',
-    color: 'black',
   },
 });
 

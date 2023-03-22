@@ -36,7 +36,7 @@ function GroundedAPI(): groundedPredictionAPI {
       headers: {'Content-Type': 'application/json'},
       body: data_array,
     };
-    fetch('http://061b-35-243-186-30.ngrok.io/predict', requestOptions)
+    fetch('http://5cd2-34-125-137-104.ngrok.io/predict', requestOptions)
       .then(async response => {
         const isJson = response.headers
           .get('content-type')
@@ -66,7 +66,6 @@ function GroundedAPI(): groundedPredictionAPI {
       const hr_data = HR_json != null ? JSON.parse(HR_json) : [];
       const eda_data = EDA_json != null ? JSON.parse(EDA_json) : [];
 
-      console.log({EDA: eda_data, HR: hr_data});
       return {EDA: eda_data, HR: hr_data};
     } catch (error) {
       console.log(error);
@@ -75,10 +74,10 @@ function GroundedAPI(): groundedPredictionAPI {
 
   const checkIfEnoughRows = rawDataObject => {
     var enough = true;
-    console.log(rawDataObject);
+    //console.log(rawDataObject);
     Object.values(rawDataObject).forEach(val => {
       if (val instanceof Array) {
-        if (val.length < 100) {
+        if (val.length < 150) {
           enough = false;
         }
       }
